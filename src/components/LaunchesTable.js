@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { Checkbox, Table, TableBody, TableCell, TableFooter,
+  TableHead, TablePagination, TableRow } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import RefreshIcon from '@mui/icons-material/Refresh'
 
@@ -23,27 +24,40 @@ async function fetchData(){
     return data;
 }
 
-function showLaunches(rows){
-  let res = []
-  if(rows){
-    if(rows.length > 0){
-      res = rows.map((row) =>(
-        <TableRow key={row.id}>
-          <TableCell> {row.id} </TableCell>
-          <TableCell> {row.name} </TableCell>
-          <TableCell>
-            {row.success ? <Checkbox checked/> : <Checkbox checked={false}/>}
-          </TableCell>
-        </TableRow>
-      ))
-    }
-  }
-  return res;
-}
-
 function LaunchesTable(){
   const [rows, setRows] = useState([]);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [page, setPage] = useState(0);
   const [refresh, setRefresh] = useState(false);
+
+  function showLaunches(rows){
+    let res = []
+    if(rows){
+      if(rows.length > 0){
+        res = rows
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .map((row) =>(
+          <TableRow key={row.id}>
+            <TableCell> {row.name} </TableCell>
+            <TableCell> {row.date_utc} </TableCell>
+            <TableCell>
+              {row.success ? <Checkbox checked/> : <Checkbox checked={false}/>}
+            </TableCell>
+          </TableRow>
+        ))
+      }
+    }
+    return res;
+  }
+
+  function handleChangePage (event, newPage){
+    setPage(newPage);
+  }
+
+  function handleChangeRowsPerPage(event){
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  }
 
   useEffect(() => {
     let isMounted = true;
@@ -78,10 +92,10 @@ function LaunchesTable(){
         <TableHead>
           <TableRow>
             <TableCell>
-              ID
+              Name
             </TableCell>
             <TableCell>
-              Name
+              Date
             </TableCell>
             <TableCell>
               Success
@@ -96,6 +110,21 @@ function LaunchesTable(){
         <TableBody>
           {showLaunches(rows)}
         </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TablePagination 
+              rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
+              component="div"
+              count={rows.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              showFirstButton
+              showLastButton
+            />
+          </TableRow>
+        </TableFooter>
       </Table>
     </div>
   );
