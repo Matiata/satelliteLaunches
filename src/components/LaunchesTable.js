@@ -5,6 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import DateFilter from "./DateFilter";
 
 async function fetchData(){
   const endpoint = 'https://api.spacexdata.com/v5/launches/';
@@ -29,6 +30,8 @@ async function fetchData(){
 function LaunchesTable(){
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [badDate, setBadDate] = useState(false);
   const [successFilter, setSuccessFilter] = useState(false);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [dataLength, setDataLength] = useState(0);
@@ -45,12 +48,25 @@ function LaunchesTable(){
       if(successFilter){
         res = res.filter(row => row.success);
       }
+      if(dateFilter.length === 10){
+        let yearFilter = parseInt(dateFilter.slice(0,4), 10);
+        let monthFilter = parseInt(dateFilter.slice(5,7), 10);
+        let dayFilter = parseInt(dateFilter.slice(8,10), 10);
+        res = res.filter(row => {
+          let year = parseInt(row.date_utc.slice(0,4), 10);
+          let month = parseInt(row.date_utc.slice(5,7), 10);
+          let day = parseInt(row.date_utc.slice(8,10), 10);
+          if(year > yearFilter) return true;
+          if(year === yearFilter && month > monthFilter) return true;
+          if(year === yearFilter && month === monthFilter && day >= dayFilter) return true;
+        })
+      }
       res = res
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       .map((row) =>(
         <TableRow key={row.id}>
           <TableCell> {row.name} </TableCell>
-          <TableCell> {row.date_utc} </TableCell>
+          <TableCell> {row.date_utc.slice(0,10)} </TableCell>
           <TableCell>
             {row.success ? <CheckIcon /> : <CloseIcon />}
           </TableCell>
@@ -100,9 +116,39 @@ function LaunchesTable(){
    useEffect(() => {
     let dataSize = 0;
     if(successFilter){
+      if(dateFilter !== '' && !badDate){
+        let yearFilter = parseInt(dateFilter.slice(0,4), 10);
+        let monthFilter = parseInt(dateFilter.slice(5,7), 10);
+        let dayFilter = parseInt(dateFilter.slice(8,10), 10);
+        rows.filter(row => {
+          if(row.success && row.name.includes(filter)){
+            let year = parseInt(row.date_utc.slice(0,4), 10);
+            let month = parseInt(row.date_utc.slice(5,7), 10);
+            let day = parseInt(row.date_utc.slice(8,10), 10);
+            if(year > yearFilter) dataSize += 1;
+            if(year === yearFilter && month > monthFilter) dataSize += 1;
+            if(year === yearFilter && month === monthFilter && day >= dayFilter) dataSize += 1;
+          }
+        })
+      }else{
+        rows.filter(row => {
+          if(row.success && row.name.includes(filter)){
+            dataSize += 1;
+          }
+        })
+      }
+    }else if(dateFilter !== '' && !badDate){
+      let yearFilter = parseInt(dateFilter.slice(0,4), 10);
+      let monthFilter = parseInt(dateFilter.slice(5,7), 10);
+      let dayFilter = parseInt(dateFilter.slice(8,10), 10);
       rows.filter(row => {
-        if(row.success && row.name.includes(filter)){
-          dataSize += 1;
+        if(row.name.includes(filter)){
+          let year = parseInt(row.date_utc.slice(0,4), 10);
+          let month = parseInt(row.date_utc.slice(5,7), 10);
+          let day = parseInt(row.date_utc.slice(8,10), 10);
+          if(year > yearFilter) dataSize += 1;
+          if(year === yearFilter && month > monthFilter) dataSize += 1;
+          if(year === yearFilter && month === monthFilter && day >= dayFilter) dataSize += 1;
         }
       })
     }else{
@@ -116,7 +162,7 @@ function LaunchesTable(){
     setDataLength(dataSize);
     setPage(0);
 
-  },[filter, successFilter]);
+  },[filter, successFilter, badDate, dateFilter]);
 
   return(
     <div>
@@ -136,7 +182,16 @@ function LaunchesTable(){
               </Stack>
             </TableCell>
             <TableCell>
-              Date
+              <Stack direction={"row"} alignItems="center" spacing={2}>
+                <div>
+                  Date
+                </div>
+                <DateFilter 
+                  badDate={badDate}
+                  setBadDate={setBadDate}
+                  setDateFilter={setDateFilter}
+                />
+              </Stack>
             </TableCell>
             <TableCell>
               <Stack direction={"row"} alignItems="center" spacing={0}>
