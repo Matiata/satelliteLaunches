@@ -170,19 +170,20 @@ function LaunchesTable(){
         <TableHead>
           <TableRow>
             <TableCell>
-              <Stack direction={"row"} alignItems="center" spacing={2}>
+              <Stack direction={"row"} alignItems="center" spacing={1}>
                 <div>
                   Name
                 </div>
                 <TextField
                   id='filter'
                   label='Name Filter'
+                  size="small"
                   onChange={(event) => setFilter(event.target.value)}
                 />
               </Stack>
             </TableCell>
             <TableCell>
-              <Stack direction={"row"} alignItems="center" spacing={2}>
+              <Stack direction={"row"} alignItems="center" spacing={1}>
                 <div>
                   Date
                 </div>
@@ -215,7 +216,6 @@ function LaunchesTable(){
           <TableRow>
             <TablePagination 
               rowsPerPageOptions={[5, 10, 25, { label: 'All', value: -1 }]}
-              component="div"
               count={dataLength}
               rowsPerPage={rowsPerPage}
               page={page}
