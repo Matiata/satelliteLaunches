@@ -39,8 +39,11 @@ function LaunchesTable(){
     let res = [];
     if(rows && rows.length > 0){
       res = rows;
-      if(!(filter === '')){
-        res = rows.filter(row => row.name.includes(filter));
+      if(filter !== ''){
+        res = res.filter(row => row.name.includes(filter));
+      }
+      if(successFilter){
+        res = res.filter(row => row.success);
       }
       res = res
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -96,15 +99,24 @@ function LaunchesTable(){
 
    useEffect(() => {
     let dataSize = 0;
-    rows.filter(row => {
-      if(row.name.includes(filter)){
-        dataSize += 1;
-      }
-    })
+    if(successFilter){
+      rows.filter(row => {
+        if(row.success && row.name.includes(filter)){
+          dataSize += 1;
+        }
+      })
+    }else{
+      rows.filter(row => {
+        if(row.name.includes(filter)){
+          dataSize += 1;
+        }
+      })
+    }
 
     setDataLength(dataSize);
+    setPage(0);
 
-  },[filter]) 
+  },[filter, successFilter]);
 
   return(
     <div>
@@ -131,7 +143,7 @@ function LaunchesTable(){
                 <div>
                   Success
                 </div>
-                <Checkbox onClick={() => setSuccessFilter(true)}/>
+                <Checkbox onClick={() => setSuccessFilter(!successFilter)}/>
               </Stack>
             </TableCell>
             <TableCell>
