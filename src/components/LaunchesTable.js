@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Checkbox, Stack, Table, TableBody, TableCell, TableFooter,
+import { Button, Checkbox, Stack, Table, TableBody, TableCell, TableFooter,
   TableHead, TablePagination, TableRow, TextField } from '@mui/material';
 import IconButton from '@mui/material/IconButton';
 import CheckIcon from '@mui/icons-material/Check';
@@ -27,6 +27,30 @@ async function fetchData(){
     return data;
 }
 
+function sortOlder(a,b){
+  let aDate = new Date(a.date_utc);
+  let bDate = new Date(b.date_utc);
+  if(aDate < bDate){
+    return -1;
+  }else if(aDate > bDate){
+    return 1;
+  }else{
+    return 0;
+  }
+}
+
+function sortNewer(a,b){
+  let aDate = new Date(a.date_utc);
+  let bDate = new Date(b.date_utc);
+  if(aDate < bDate){
+    return 1;
+  }else if(aDate > bDate){
+    return -1;
+  }else{
+    return 0;
+  }
+}
+
 function LaunchesTable(){
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('');
@@ -36,6 +60,7 @@ function LaunchesTable(){
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [dataLength, setDataLength] = useState(0);
   const [page, setPage] = useState(0);
+  const [sort, setSort] = useState(false);
   const [refresh, setRefresh] = useState(true);
 
   function showLaunches(rows){
@@ -52,15 +77,20 @@ function LaunchesTable(){
         let yearFilter = parseInt(dateFilter.slice(0,4), 10);
         let monthFilter = parseInt(dateFilter.slice(5,7), 10);
         let dayFilter = parseInt(dateFilter.slice(8,10), 10);
-        res = res.filter(row => {
-          let year = parseInt(row.date_utc.slice(0,4), 10);
-          let month = parseInt(row.date_utc.slice(5,7), 10);
-          let day = parseInt(row.date_utc.slice(8,10), 10);
-          if(year > yearFilter) return true;
-          if(year === yearFilter && month > monthFilter) return true;
-          if(year === yearFilter && month === monthFilter && day >= dayFilter) return true;
-        })
-      }
+          res = res.filter(row => {
+            let year = parseInt(row.date_utc.slice(0,4), 10);
+            let month = parseInt(row.date_utc.slice(5,7), 10);
+            let day = parseInt(row.date_utc.slice(8,10), 10);
+            if(year > yearFilter) return true;
+            if(year === yearFilter && month > monthFilter) return true;
+            if(year === yearFilter && month === monthFilter && day >= dayFilter) return true;
+          })
+        }
+        if(sort){
+          res = res.sort(sortOlder);
+        }else{
+          res = res.sort(sortNewer);
+        }
       res = res
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       .map((row) =>(
@@ -162,7 +192,7 @@ function LaunchesTable(){
     setDataLength(dataSize);
     setPage(0);
 
-  },[filter, successFilter, badDate, dateFilter]);
+  },[filter, successFilter, badDate, dateFilter, sort]);
 
   return(
     <div>
@@ -192,6 +222,12 @@ function LaunchesTable(){
                   setBadDate={setBadDate}
                   setDateFilter={setDateFilter}
                 />
+                <Button
+                  variant="outlined"
+                  onClick={() => setSort(!sort)}
+                >
+                  Sort
+                </Button>
               </Stack>
             </TableCell>
             <TableCell>
